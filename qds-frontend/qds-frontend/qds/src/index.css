@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 243, 255, 0.06), transparent),
+    #070a11;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(0, 243, 255, 0.25);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0d121f;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c2740;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #263254;
+}
+
+.mono-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fine CRT-style scanline texture for the log panel */
+.crt-texture {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #00f3ff;
+  outline-offset: 2px;
+}
