@@ -1,25 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ThreatVectorHUD } from './ThreatVectorHUD';
 import { motion } from 'framer-motion';
 
 const BUTTONS = [
-  { id: 'intercept', label: 'INTERCEPT', sub: 'eavesdrop tap', color: '#ff003c' },
-  { id: 'entangle', label: 'ENTANGLE', sub: 'aux probe', color: '#9d00ff' },
-  { id: 'replay', label: 'REPLAY', sub: 'phase buffer', color: '#ffb800' },
-  { id: 'batchNoise', label: 'BATCH NOISE', sub: 'thermal jitter', color: '#ffb800' },
-  { id: 'blind', label: 'BLIND', sub: 'receiver flare', color: '#00f3ff' },
-  { id: 'macForge', label: 'MAC FORGE', sub: 'auth breach', color: '#ff003c' },
-  { id: 'impersonate', label: 'IMPERSONATE', sub: 'identity fraud', color: '#ff003c' },
-  { id: 'rogue_verifier', label: 'ROGUE VERIFIER', sub: 'hijack verification', color: '#ffb800' },
-  { id: 'none', label: 'RESET', sub: 'clean channel', color: '#00ff66' }
+  { id: 'intercept', label: 'INTERCEPT', sub: 'eavesdrop tap', color: '#DC2626' },
+  { id: 'entangle', label: 'ENTANGLE', sub: 'aux probe', color: '#6D28D9' },
+  { id: 'replay', label: 'REPLAY', sub: 'phase buffer', color: '#F59E0B' },
+  { id: 'batchNoise', label: 'BATCH NOISE', sub: 'thermal jitter', color: '#F59E0B' },
+  { id: 'blind', label: 'BLIND', sub: 'receiver flare', color: '#8B5CF6' },
+  { id: 'macForge', label: 'MAC FORGE', sub: 'auth breach', color: '#DC2626' },
+  { id: 'impersonate', label: 'IMPERSONATE', sub: 'identity fraud', color: '#DC2626' },
+  { id: 'rogue_verifier', label: 'ROGUE VERIFIER', sub: 'hijack verification', color: '#F59E0B' },
+  { id: 'none', label: 'RESET', sub: 'clean channel', color: '#22C55E' }
 ];
 
 /**
  * Tactile attack-trigger console. Each switch dispatches
  * {"command": "START", "attack": "<id>"} over the socket.
  */
-import { useState, useEffect } from 'react';
 
 export default function CyberDeckControls({ theme = 'dark', activeAttack, onTrigger }) {
+  const [hudAttack, setHudAttack] = useState(null);
+  const hudTimer = useRef(null);
   const [localAttack, setLocalAttack] = useState(activeAttack);
 
   useEffect(() => {
@@ -32,6 +34,8 @@ export default function CyberDeckControls({ theme = 'dark', activeAttack, onTrig
   };
 
   return (
+    <>
+      <ThreatVectorHUD attackId={hudAttack} onClose={() => setHudAttack(null)} />
     <div className="w-full h-full flex flex-col justify-center">
       
       <div className="grid grid-cols-2 gap-4">
@@ -43,15 +47,14 @@ export default function CyberDeckControls({ theme = 'dark', activeAttack, onTrig
               onClick={() => handleTrigger(btn.id)}
               whileTap={{ scale: 0.94 }}
               whileHover={{ y: -1 }}
-              className="relative flex flex-col items-start gap-1 rounded-md border px-3 py-2.5 text-left transition-colors"
+              className={`relative flex flex-col items-start gap-1 rounded-md border ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937]' : 'bg-white border-[#E5E7EB]'} px-3 py-2.5 text-left transition-colors`}
               style={{
-                borderColor: isActive ? btn.color : (theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
-                background: isActive ? `${btn.color}1a` : 'transparent',
-                boxShadow: isActive ? `0 0 16px ${btn.color}55` : 'none'
+                borderLeft: isActive ? `4px solid ${btn.color}` : (theme === 'dark' ? '1px solid #1F2937' : '1px solid #E5E7EB'),
+                borderLeftWidth: isActive ? '4px' : '1px'
               }}
             >
               <span
-                className="text-[11px] font-mono tracking-wide"
+                className="text-[11px]  tracking-wide"
                 style={{ color: isActive ? btn.color : (theme === 'dark' ? '#c3cfe8' : '#475569') }}
               >
                 {btn.label}
@@ -66,10 +69,23 @@ export default function CyberDeckControls({ theme = 'dark', activeAttack, onTrig
                   transition={{ duration: 1, repeat: Infinity }}
                 />
               )}
+              
+              <div 
+                onClick={(e) => { e.stopPropagation(); setHudAttack(btn.id); }}
+                className="absolute top-2 right-8 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer transition-colors hover:scale-110"
+                style={{ 
+                  border: `1px solid ${isActive ? btn.color : (theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)')}`,
+                  color: isActive ? btn.color : (theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'),
+                  background: 'transparent'
+                }}
+              >
+                i
+              </div>
             </motion.button>
           );
         })}
       </div>
     </div>
+    </>
   );
 }

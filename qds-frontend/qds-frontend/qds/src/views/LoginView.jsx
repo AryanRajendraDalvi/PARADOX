@@ -39,7 +39,7 @@ export default function LoginView() {
         className="w-full max-w-sm rounded-lg border border-white/10 bg-surface/80 p-8"
       >
         <div className="mb-6 text-center">
-          <h1 className="font-display text-xl text-slate-100 tracking-tight">QDS Threat Detection</h1>
+          <h1 className=" text-xl text-slate-100 tracking-tight" style={{ fontFamily: "\'Montserrat\', sans-serif" }}>PARADOX</h1>
           <p className="text-xs text-slate-500 mt-1">Sign in to your participant session</p>
         </div>
 
@@ -53,11 +53,11 @@ export default function LoginView() {
               autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-md border border-white/10 bg-bg px-3 py-2 text-sm text-slate-200 font-mono outline-none focus:border-cyan/60"
+              className="w-full rounded-md border border-white/10 bg-bg px-3 py-2 text-sm text-slate-200  outline-none focus:border-cyan/60"
               placeholder="alice"
             />
             {accountHint && (
-              <p className="text-[10px] text-cyan mt-1 font-mono">{accountHint}</p>
+              <p className="text-[10px] text-cyan mt-1 ">{accountHint}</p>
             )}
           </div>
 
@@ -71,13 +71,13 @@ export default function LoginView() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-white/10 bg-bg px-3 py-2 text-sm text-slate-200 font-mono outline-none focus:border-cyan/60"
+              className="w-full rounded-md border border-white/10 bg-bg px-3 py-2 text-sm text-slate-200  outline-none focus:border-cyan/60"
               placeholder="••••••••"
             />
           </div>
 
           {(error || localError) && (
-            <div className="text-xs text-crimson font-mono bg-crimson/5 border border-crimson/20 rounded-md px-3 py-2">
+            <div className="text-xs text-red-500  bg-red-500/5 border border-red-500/20 rounded-md px-3 py-2">
               {localError || error}
             </div>
           )}
@@ -85,7 +85,7 @@ export default function LoginView() {
           <button
             type="submit"
             disabled={loading || !username || !password}
-            className="w-full rounded-md bg-cyan/15 border border-cyan/40 text-cyan text-sm font-mono py-2.5 hover:bg-cyan/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-cyan/15 border border-cyan/40 text-cyan text-sm  py-2.5 hover:bg-cyan/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? 'AUTHENTICATING…' : 'SIGN IN'}
           </button>

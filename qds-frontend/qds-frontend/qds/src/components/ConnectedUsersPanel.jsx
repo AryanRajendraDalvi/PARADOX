@@ -12,13 +12,13 @@ export default function ConnectedUsersPanel({ onlineUsers }) {
     <div className="rounded-lg border border-white/5 bg-surface/60 p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs tracking-wide text-slate-500">CONNECTED PARTICIPANTS</span>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 text-slate-500">
+        <span className="text-[10px]  px-2 py-0.5 rounded-full border border-white/10 text-slate-500">
           {onlineUsers.length} online
         </span>
       </div>
 
       {onlineUsers.length === 0 ? (
-        <p className="text-[11px] text-slate-600 font-mono">No participants connected yet.</p>
+        <p className="text-[11px] text-slate-600 ">No participants connected yet.</p>
       ) : (
         <div className="space-y-2">
           {onlineUsers.map((u) => (
@@ -27,11 +27,11 @@ export default function ConnectedUsersPanel({ onlineUsers }) {
               className="flex items-center gap-3 px-3 py-2 rounded-md border border-white/5 bg-white/[0.02]"
             >
               <span
-                className="w-2 h-2 rounded-full bg-phosphor shrink-0"
-                style={{ boxShadow: '0 0 6px #00ff66' }}
+                className="w-2 h-2 rounded-full bg-green-500 shrink-0"
+                style={{ boxShadow: 'none' }}
               />
-              <span className="text-sm text-slate-200 font-mono">{u.displayName}</span>
-              <span className="text-[10px] text-slate-600 font-mono ml-auto">{u.user_id}</span>
+              <span className="text-sm text-slate-200 ">{u.displayName}</span>
+              <span className="text-[10px] text-slate-600  ml-auto">{u.user_id}</span>
             </div>
           ))}
         </div>

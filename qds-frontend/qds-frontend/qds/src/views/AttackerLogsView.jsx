@@ -23,8 +23,8 @@ export default function AttackerLogsView({ frame, history, connection, sendComma
             exit={{ opacity: 0 }}
             className="fixed inset-x-0 top-0 h-1.5 z-50 pointer-events-none"
             style={{
-              background: 'linear-gradient(90deg, transparent, #ff003c, transparent)',
-              boxShadow: '0 0 20px #ff003c'
+              background: 'linear-gradient(90deg, transparent, #DC2626, transparent)',
+              boxShadow: 'none'
             }}
           >
             <motion.div

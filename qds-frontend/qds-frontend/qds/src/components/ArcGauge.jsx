@@ -31,7 +31,8 @@ export default function ArcGauge({
   threshold,
   domainMax,
   unit = '',
-  formatValue = (v) => v.toFixed(3)
+  formatValue = (v) => v.toFixed(3),
+  baseColor = '#2563EB'
 }) {
   const wasOverRef = useRef(false);
   const [justCrossed, setJustCrossed] = useState(false);
@@ -53,9 +54,9 @@ export default function ArcGauge({
     if (!isOver) wasOverRef.current = false;
   }, [isOver]);
 
-  let color = '#00f3ff';
-  if (proximity >= 1) color = '#ff003c';
-  else if (proximity >= 0.75) color = '#ffb800';
+  let color = baseColor;
+  if (proximity >= 1) color = '#DC2626';
+  else if (proximity >= 0.75) color = '#CA8A04';
 
   const cx = SIZE / 2;
   const cy = SIZE / 2;
@@ -84,7 +85,7 @@ export default function ArcGauge({
             initial={false}
             animate={{ d: valuePath, stroke: color }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+            
           />
           {/* Threshold tick */}
           <line
@@ -92,7 +93,7 @@ export default function ArcGauge({
             y1={thresholdPos.y}
             x2={cx + (thresholdPos.x - cx) * 0.72}
             y2={cy + (thresholdPos.y - cy) * 0.72}
-            stroke="#ff003c"
+            stroke="#DC2626"
             strokeWidth={2.5}
             strokeLinecap="round"
           />
@@ -113,7 +114,7 @@ export default function ArcGauge({
 
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-xl mono-nums" style={{ color }}>
+          <span className=" text-xl mono-nums" style={{ color }}>
             {formatValue(value)}
             {unit}
           </span>
@@ -123,7 +124,7 @@ export default function ArcGauge({
           {justCrossed && (
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
-              style={{ border: '2px solid #ff003c' }}
+              style={{ border: '2px solid #DC2626' }}
               initial={{ scale: 0.6, opacity: 0.9 }}
               animate={{ scale: 1.5, opacity: 0 }}
               exit={{ opacity: 0 }}
@@ -134,8 +135,8 @@ export default function ArcGauge({
       </div>
       <span className="text-xs tracking-wide text-slate-400">{label}</span>
       <span
-        className={`text-[10px] font-mono px-2 py-0.5 rounded-sm ${
-          isOver ? 'bg-crimson/15 text-crimson' : 'bg-cyan/10 text-cyan'
+        className={`text-[10px]  px-2 py-0.5 rounded-sm ${
+          isOver ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
         }`}
       >
         {isOver ? 'THRESHOLD EXCEEDED' : 'NOMINAL'}

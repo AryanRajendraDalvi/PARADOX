@@ -1,246 +1,244 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
+import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import ChatPanel from '../components/ChatPanel.jsx';
+import { TimeSeriesChart } from '../components/LiveCharts.jsx';
 import ArcGauge from '../components/ArcGauge.jsx';
-import MerminGauge from '../components/MerminGauge.jsx';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../auth/AuthContext.jsx';
 
-function filterConversation(messages, myUserId, peerId) {
-  return messages.filter((m) => {
-    if (m.direction === 'outgoing' && !m.from_user_id) return m.to_user_id === peerId;
-    if (m.from_user_id === myUserId && m.to_user_id === peerId) return true;
-    if (m.from_user_id === peerId && m.to_user_id === myUserId) return true;
-    if (m.verification && m.from_user_id === peerId) return true;
-    return false;
-  });
-}
+export default function ParticipantView({ session, connection, messages, onlineUsers, sendMessage, sendCommand, latestRound, roundUpdates }) {
+  const [activeTab, setActiveTab] = useState('Home');
+  const [selectedUser, setSelectedUser] = useState(null);
 
-function countUnread(messages, myUserId, openPeerId) {
-  const counts = {};
-  for (const m of messages) {
-    if (m.direction !== 'incoming') continue;
-    if (m.from_user_id === openPeerId) continue;
-    
-    if (m.verification) {
-       const sender = m.from_user_id;
-       counts[sender] = (counts[sender] || 0) + 1;
-       continue;
-    }
-    
-    if (m.to_user_id !== myUserId && m.to_user_id) continue;
-    
-    const sender = m.from_user_id;
-    if (!sender || sender === myUserId) continue;
-    counts[sender] = (counts[sender] || 0) + 1;
-  }
-  return counts;
-}
-
-export default function ParticipantView({ session, connection, messages, onlineUsers, sendMessage, sendCommand, latestRound }) {
-  const { logout } = useAuth();
-  const [showLogout, setShowLogout] = useState(false);
-  const [theme, setTheme] = useState('dark');
-  const [selectedRecipient, setSelectedRecipient] = useState(null);
-  const [logsOpen, setLogsOpen] = useState(false);
-  const myUserId = session.user_id;
-
-  const recipients = useMemo(
-    () => onlineUsers.filter((u) => u.user_id !== myUserId),
-    [onlineUsers, myUserId]
-  );
-
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   React.useEffect(() => {
-    if (selectedRecipient && !recipients.some((u) => u.user_id === selectedRecipient)) {
-      setSelectedRecipient(null);
-    }
-  }, [recipients, selectedRecipient]);
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [theme]);
+  const decoyQBER = latestRound?.checks?.decoy_qber ?? 0;
+  const tauHoeffding = latestRound?.checks?.tau_hoeffding ?? 0.061;
+  const isSimulating = (latestRound?.metrics?.total_rounds ?? 0) > 0;
+  const activeAttack = latestRound?.attack?.type ?? 'none';
+  const isQuantumAttack = ['intercept', 'entangle', 'blind', 'batchNoise'].includes(activeAttack);
+  const isClassicalAttack = ['replay', 'macForge', 'impersonate', 'rogue_verifier'].includes(activeAttack);
+  
+  const quantumStatusColor = isQuantumAttack ? 'text-red-500' : 'text-emerald-500';
+  const quantumBgColor = isQuantumAttack ? 'bg-red-500' : 'bg-emerald-500';
+  const quantumText = isQuantumAttack ? 'Compromised' : 'Nominal';
+  const quantumShadow = isQuantumAttack ? 'rgba(239,68,68,0.8)' : 'rgba(16,185,129,0.8)';
+  
+  const classicalStatusColor = isClassicalAttack ? 'text-red-500' : 'text-emerald-500';
+  const classicalBgColor = isClassicalAttack ? 'bg-red-500' : 'bg-emerald-500';
+  const classicalText = isClassicalAttack ? 'Compromised' : 'Authenticated';
+  const classicalShadow = isClassicalAttack ? 'rgba(239,68,68,0.8)' : 'rgba(16,185,129,0.8)';
+  
+  const channelHealthColor = (isQuantumAttack || isClassicalAttack) ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+  const channelHealthIconBg = (isQuantumAttack || isClassicalAttack) ? 'bg-red-500' : 'bg-emerald-500';
+  const channelHealthIconText = (isQuantumAttack || isClassicalAttack) ? '!' : '✓';
+  const channelHealthText = (isQuantumAttack || isClassicalAttack) ? 'Channel under attack. Metrics exceed secure bounds.' : 'Channel is healthy. All metrics within secure bounds.';
 
-  const recipientInfo = recipients.find((u) => u.user_id === selectedRecipient) ?? null;
 
-  const conversationMessages = useMemo(
-    () => (selectedRecipient ? filterConversation(messages, myUserId, selectedRecipient) : []),
-    [messages, myUserId, selectedRecipient]
+  const getConversationMessages = (userId) => {
+    return messages.filter(
+      (m) =>
+        (m.from_user_id === session.user_id && m.to_user_id === userId) ||
+        (m.from_user_id === userId && m.to_user_id === session.user_id) ||
+        (m.verification && session.user_id === 'charlie' && m.from_user_id === userId)
+    ).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  };
+
+  const conversationMessages = selectedUser ? getConversationMessages(selectedUser.user_id) : [];
+
+  const unreadCounts = {};
+  onlineUsers.forEach(u => {
+    if (u.user_id === session.user_id) return;
+    let count = 0;
+    const convo = getConversationMessages(u.user_id);
+    convo.forEach(m => {
+      // If we are charlie and there is a pending verification
+      if (m.verification && !m.charlie_shared && session.user_id === 'charlie') {
+        count++;
+      }
+    });
+    unreadCounts[u.user_id] = count;
+  });
+
+
+  // Empty State Component
+  const EmptyState = ({ message, action }) => (
+    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full">
+      <div className={`w-24 h-24 mb-6 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-slate-800 text-slate-600' : 'bg-slate-100 text-slate-300'}`}>
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+      </div>
+      <h3 className={`text-xl font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Select a user</h3>
+      <p className={`text-sm max-w-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>{message}</p>
+    </div>
   );
-
-  const unreadCounts = useMemo(
-    () => countUnread(messages, myUserId, selectedRecipient),
-    [messages, myUserId, selectedRecipient]
-  );
-
-  const currentRoles = latestRound?.current_roles ?? { sender: 'alice', receiver: 'bob', verifier: 'charlie' };
-  const isReceiver = currentRoles.receiver === myUserId;
-  const isVerifier = currentRoles.verifier === myUserId;
-  const isSender = currentRoles.sender === myUserId;
-
-  let recipientRole = 'Unknown';
-  if (recipientInfo) {
-    if (currentRoles.sender === recipientInfo.user_id) recipientRole = 'Sender';
-    else if (currentRoles.receiver === recipientInfo.user_id) recipientRole = 'Receiver';
-    else if (currentRoles.verifier === recipientInfo.user_id) recipientRole = 'Verifier';
-  }
 
   return (
-    <div className={`min-h-screen p-4 flex justify-center items-center font-sans ${theme === 'dark' ? 'bg-black' : 'bg-slate-100'}`}>
-      <div className="w-full max-w-[1400px] h-[85vh] flex gap-4">
-        
-        {/* LEFT SIDEBAR */}
-        <div className={`w-[220px] flex flex-col shrink-0 rounded-[2rem] border p-6 relative overflow-hidden ${theme === 'dark' ? 'border-white/20 bg-black' : 'border-slate-300 bg-white shadow-sm'}`}>
-          <div className="absolute top-6 right-6 z-10">
-            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className={`text-xl ${theme === 'dark' ? 'text-white/50 hover:text-white' : 'text-slate-400 hover:text-black'}`}>
-              {theme === 'dark' ? '☀' : '☾'}
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto space-y-4 mt-6">
-            {recipients.map((u, i) => {
-              const active = selectedRecipient === u.user_id;
-              const unread = unreadCounts[u.user_id] ?? 0;
-              return (
-                <div 
-                  key={u.user_id}
-                  onClick={() => setSelectedRecipient(u.user_id)}
-                  className={`cursor-pointer border-b pb-4 transition-colors ${theme === 'dark' ? (active ? 'border-white/50' : 'border-white/20 hover:border-white/40') : (active ? 'border-slate-400' : 'border-slate-200 hover:border-slate-300')}`}
-                >
-                  <div className={`text-xl flex items-center justify-between ${theme === 'dark' ? (active ? 'text-white' : 'text-blue-400') : (active ? 'text-black' : 'text-slate-600')}`}>
-                    {u.displayName}
-                    {unread > 0 && <span className="text-[10px] bg-blue-500 text-black px-2 py-0.5 rounded-full">{unread}</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 shrink-0">
-            <div className="text-green-500 text-xs mb-2">Connected to Server</div>
-            <div className="relative">
-              <div 
-                className={`flex items-center gap-3 cursor-pointer ${theme === 'dark' ? 'text-blue-400' : 'text-slate-600'}`}
-                onClick={() => setShowLogout(!showLogout)}
-              >
-                <div className="w-5 h-5 rounded-full border-[3px] border-green-500"></div>
-                <span className={`text-xl transition-colors ${theme === 'dark' ? 'hover:text-white' : 'hover:text-black'}`}>{session.displayName}</span>
-              </div>
-              <AnimatePresence>
-                {showLogout && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    onClick={logout}
-                    className="absolute bottom-10 left-0 bg-red-900/80 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg border border-red-500/50 shadow-lg"
-                  >
-                    Sign Out
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
+    <DashboardLayout theme={theme} setTheme={setTheme} role="user" user={{ displayName: session.displayName || session.user_id }} activeTab={activeTab} onTabChange={setActiveTab}>
+      
+      {/* =========================================
+          TAB 1: HOME
+         ========================================= */}
+      {activeTab === 'Home' && (
+        <div className="w-full h-full rounded-xl overflow-hidden relative flex items-center justify-center bg-transparent">
+          
+          <div className="z-10 w-full px-12 md:px-24">
+            <h2 className={`text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'} drop-shadow-sm leading-tight`} style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Trusted<br/>Quantum Signatures
+            </h2>
+            <p className={`mt-6 text-2xl md:text-3xl font-medium ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>
+              for a Secure Future
+            </p>
+            <div className={`mt-8 w-16 h-1 rounded ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'}`}></div>
           </div>
         </div>
+      )}
 
-        {/* MAIN PANEL */}
-        <div className={`flex-1 rounded-[2rem] border flex flex-col relative overflow-hidden ${theme === 'dark' ? 'border-white/20 bg-black' : 'border-slate-300 bg-white shadow-sm'}`}>
-          {!selectedRecipient ? (
-            <div className="flex-1 flex items-center justify-center">
-              <h1 className={`text-6xl font-serif italic tracking-wider opacity-90 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>QDS Threat Detection</h1>
+      {/* =========================================
+          TAB 2: PEOPLE (CHAT)
+         ========================================= */}
+      {activeTab === 'People' && (
+        <div className={`h-full rounded-xl border flex overflow-hidden ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937] shadow-xl' : 'border-white/60 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)]'}`}>
+          
+          {/* Left Column: User List */}
+          <div className={`w-1/3 border-r flex flex-col ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+            <div className={`p-4 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+              <input type="text" placeholder="Search users..." className={`w-full px-3 py-2 rounded text-sm border ${theme === 'dark' ? 'bg-slate-800 border-slate-600 text-white' : 'bg-slate-50 border-slate-300'}`} />
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {onlineUsers.filter(u => u.user_id !== session.user_id).map(u => (
+                <div 
+                  key={u.user_id} 
+                  onClick={() => setSelectedUser(u)}
+                  className={`p-4 flex items-center justify-between cursor-pointer border-b last:border-0 transition-colors
+                    ${selectedUser?.user_id === u.user_id ? (theme === 'dark' ? 'bg-slate-800' : 'bg-blue-50') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-800/50' : 'border-slate-100 hover:bg-slate-50')}
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${u.account_type === 'admin' ? 'bg-blue-600' : 'bg-emerald-500'}`}>
+                      {u.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>{u.displayName}</div>
+                      
+                      <div className="text-[10px] text-emerald-500 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {unreadCounts[u.user_id] > 0 && (
+                      <div className="bg-violet text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                        {unreadCounts[u.user_id]} Pending Share
+                      </div>
+                    )}
+                    <div className={`text-xl opacity-30 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>›</div>
+                  </div>
+
+                </div>
+              ))}
+              {onlineUsers.length <= 1 && (
+                <div className={`p-8 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                  No other nodes are currently connected.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Chat Panel */}
+          <div className="flex-1 flex flex-col bg-transparent">
+            {!selectedUser ? (
+              <EmptyState message="Your secure messages will appear here." />
+            ) : (
+              <ChatPanel 
+                myUserId={session.user_id}
+                messages={conversationMessages} 
+                sendMessage={sendMessage} 
+                sendCommand={sendCommand} 
+                latestRound={latestRound}
+                selectedRecipient={selectedUser.user_id}
+                recipientInfo={selectedUser}
+                theme={theme}
+                connection={connection}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================
+          TAB 3: CHANNEL STATUS
+         ========================================= */}
+      {activeTab === 'Channel Status' && (
+        <div className="h-full flex flex-col gap-6">
+          {false ? (
+            <div className={`flex-1 rounded-xl border flex items-center justify-center ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937] shadow-xl' : 'bg-white/90 backdrop-blur-md border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'}`}>
+               <EmptyState message="No verification activity detected. Waiting for protocol execution..." />
             </div>
           ) : (
             <>
-              {/* TOP BAR */}
-              <div className={`h-16 border-b flex items-center justify-between px-6 shrink-0 ${theme === 'dark' ? 'border-white/20' : 'border-slate-200'}`}>
-                <div className="flex items-center gap-4">
-                  <button onClick={() => setSelectedRecipient(null)} className={`transition-colors text-2xl pb-1 ${theme === 'dark' ? 'text-white/60 hover:text-white' : 'text-slate-400 hover:text-black'}`}>
-                    &larr;
-                  </button>
-                  <div className={`text-sm flex items-center gap-6 ${theme === 'dark' ? 'text-blue-400' : 'text-slate-600'}`}>
-                    <span>{recipientInfo?.displayName}</span>
-                    <span>Role: {recipientRole}</span>
-                    <span>{connection === 'live' ? 'online' : 'offline'}</span>
-                  </div>
+              {/* Top Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0">
+                <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937] shadow-xl' : 'bg-white/90 backdrop-blur-md border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'}`}>
+                  <h4 className="text-sm font-semibold text-slate-500 mb-6">Quantum Channel</h4>
+                  <div className={`flex items-center gap-3 font-bold text-2xl mb-2 ${quantumStatusColor}`}>
+                      <span className={`w-4 h-4 rounded-full ${quantumBgColor}`} style={{ boxShadow: `0 0 12px ${quantumShadow}` }}></span> {quantumText}
+                    </div>
+                  <div className="text-xs text-slate-500">QBER: {(decoyQBER * 100).toFixed(2)}% | Threshold: {(tauHoeffding * 100).toFixed(2)}%</div>
                 </div>
-                <button onClick={() => setLogsOpen(!logsOpen)} className={`transition-colors text-2xl flex flex-col gap-1.5 p-2 ${theme === 'dark' ? 'text-white/60 hover:text-white' : 'text-slate-400 hover:text-black'}`}>
-                  <div className="w-6 h-[2px] bg-current"></div>
-                  <div className="w-6 h-[2px] bg-current"></div>
-                  <div className="w-6 h-[2px] bg-current"></div>
-                </button>
+
+                <div className={`rounded-xl border p-6 ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937] shadow-xl' : 'bg-white/90 backdrop-blur-md border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'}`}>
+                  <h4 className="text-sm font-semibold text-slate-500 mb-6">Classical Channel</h4>
+                  <div className={`flex items-center gap-3 font-bold text-2xl mb-2 ${classicalStatusColor}`}>
+                      <span className={`w-4 h-4 rounded-full ${classicalBgColor}`} style={{ boxShadow: `0 0 12px ${classicalShadow}` }}></span> {classicalText}
+                    </div>
+                  <div className="text-xs text-slate-500">Latency: 12 ms | Status: Stable</div>
+                </div>
               </div>
 
-              {/* CHAT AREA */}
-              <div className="flex-1 overflow-hidden flex flex-col relative">
-                <ChatPanel
-                  theme={theme}
-                  messages={conversationMessages}
-                  connection={connection}
-                  selectedRecipient={selectedRecipient}
-                  recipientInfo={recipientInfo}
-                  sendMessage={sendMessage}
-                  sendCommand={sendCommand}
-                  myUserId={myUserId}
-                  latestRound={latestRound}
-                  hideHeader={true}
-                />
+              {/* Chart Area */}
+              <div className={`flex-1 rounded-xl border p-6 flex flex-col ${theme === 'dark' ? 'bg-[#111827] border-[#1F2937] shadow-xl' : 'bg-white/90 backdrop-blur-md border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'}`}>
+                <h4 className="text-sm font-semibold text-slate-500 mb-6">Channel Metrics (Live)</h4>
+                <div className="flex-1 w-full min-h-0 mb-6">
+                    <TimeSeriesChart 
+                       data={roundUpdates || []} 
+                       dataKey="qber" 
+                       color={theme === 'dark' ? '#38bdf8' : '#0284c7'} 
+                       label="Decoy QBER" 
+                       thresholdKey="hoeffding" 
+                       thresholdColor={theme === 'dark' ? '#fbbf24' : '#d97706'} 
+                       domain={[0, 15]} 
+                       formatPercent={true} 
+                       theme={theme} 
+                    />
+                  </div>
+                <div className={`p-4 rounded-lg border text-sm font-medium flex items-center gap-3 ${channelHealthColor}`}>
+                    <span className={`w-5 h-5 rounded-full text-white flex items-center justify-center text-xs ${channelHealthIconBg}`}>{channelHealthIconText}</span>
+                    {channelHealthText}
+                  </div>
               </div>
             </>
           )}
         </div>
+      )}
 
-        {/* LOGS PANEL */}
-        <AnimatePresence>
-          {logsOpen && selectedRecipient && (
-            <motion.div
-              initial={{ width: 0, opacity: 0, marginLeft: 0 }}
-              animate={{ width: 340, opacity: 1, marginLeft: 16 }}
-              exit={{ width: 0, opacity: 0, marginLeft: 0 }}
-              className={`shrink-0 flex flex-col rounded-[2rem] border p-6 overflow-hidden ${theme === 'dark' ? 'border-white/20 bg-black' : 'border-slate-300 bg-slate-50 shadow-inner'}`}
-            >
-              <h2 className={`text-2xl mb-8 font-serif italic ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Logs</h2>
-              
-              <div className="flex-1 flex flex-col items-center gap-8 overflow-y-auto">
-                 {isReceiver && (
-                   <>
-                      <div className={`text-xs self-start uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-slate-500'}`}>Live Channel Metrics</div>
-                      <ArcGauge
-                        label="Hoeffding Threshold"
-                        value={latestRound?.checks?.decoy_qber ?? 0}
-                        threshold={latestRound?.checks?.tau_hoeffding ?? 0.061}
-                        domainMax={0.18}
-                      />
-                      <div className={`mt-2 text-center max-w-[200px] text-[10px] font-mono leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                        <strong>If &gt; {((latestRound?.checks?.tau_hoeffding ?? 0.061)*100).toFixed(1)}%:</strong> Eavesdropper detected in quantum channel (Hoeffding bound). Protocol aborts.
-                      </div>
-                      <ArcGauge
-                        label="CEFB Bound"
-                        value={latestRound?.checks?.mismatch_rate ?? 0}
-                        threshold={latestRound?.checks?.tau_cefb ?? 0.089}
-                        domainMax={0.18}
-                      />
-                      <div className={`mt-2 text-center max-w-[200px] text-[10px] font-mono leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                        <strong>If &gt; {((latestRound?.checks?.tau_cefb ?? 0.089)*100).toFixed(1)}%:</strong> Information-theoretic MAC forgery becomes mathematically possible. Protocol aborts.
-                      </div>
-                   </>
-                 )}
+      {/* =========================================
+          TAB 4: HELP
+         ========================================= */}
+      {activeTab === 'Help' && (
+        <div className={`h-full rounded-xl border p-8 ${theme === 'dark' ? 'bg-[#1e293b] border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800'}`}>
+          <h2 className="text-2xl font-semibold mb-6">Help & Documentation</h2>
+          <div className="space-y-4 max-w-2xl">
+            <h3 className="text-lg font-medium text-blue-500">How to send a secure message?</h3>
+            <p className="opacity-80">Navigate to the "People" tab, select a connected node from the list, and type your message. The message will be classically authenticated and its signature verified using the quantum state distributed during the latest batch.</p>
+            
+            <h3 className="text-lg font-medium text-blue-500 mt-8">What does "Channel Status" mean?</h3>
+            <p className="opacity-80">The Channel Status tab monitors the physical integrity of the quantum link. If Eve attempts to eavesdrop or tamper with the quantum channel, the QBER (Quantum Bit Error Rate) will spike above the theoretical threshold, and the system will instantly abort the protocol to guarantee your security.</p>
+          </div>
+        </div>
+      )}
 
-                 {isVerifier && (
-                   <>
-                      <div className={`text-xs self-start uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-slate-500'}`}>Hardware Integrity (Mermin)</div>
-                      <MerminGauge value={latestRound?.checks?.mermin_value ?? null} />
-                      <div className={`mt-2 text-center max-w-[200px] text-[10px] font-mono leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                        <strong>If &lt; 2.0:</strong> Local realism holds. Quantum entanglement is broken. Hardware compromised.
-                      </div>
-                   </>
-                 )}
-
-                 {(!isReceiver && !isVerifier) && (
-                   <div className="opacity-50 flex items-center justify-center h-32 w-full">
-                     <div className={`text-xs text-center ${theme === 'dark' ? 'text-blue-400' : 'text-slate-500'}`}>
-                       {isSender ? 'AWAITING RESPONSE...' : 'NO ACTIVE VERIFICATION ROLE'}
-                     </div>
-                   </div>
-                 )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

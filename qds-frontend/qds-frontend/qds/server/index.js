@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+﻿import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { WebSocketServer } from 'ws';
 
 // ---------------------------------------------------------------------------
-// Config â€” no hardcoded localhost. Bind address / port are configurable so
+// Config Ã¢â‚¬â€ no hardcoded localhost. Bind address / port are configurable so
 // this can run reachable on a LAN (e.g. HOST=0.0.0.0 PORT=4000).
 // ---------------------------------------------------------------------------
 
@@ -28,9 +28,9 @@ function corsHeaders(origin) {
 }
 
 // ---------------------------------------------------------------------------
-// Users â€” demo accounts only. account_type is fixed (admin vs participant).
+// Users Ã¢â‚¬â€ demo accounts only. account_type is fixed (admin vs participant).
 // There are NO permanent QDS protocol roles (sender/receiver/verifier).
-// Those are derived per-message from who sends to whom â€” see MESSAGE_SEND.
+// Those are derived per-message from who sends to whom Ã¢â‚¬â€ see MESSAGE_SEND.
 // ---------------------------------------------------------------------------
 
 const USERS = {
@@ -42,6 +42,12 @@ const USERS = {
 
 // token -> { user_id, username, account_type, displayName }
 const tokens = new Map();
+const commandTimestamps = new Map();
+const recentHashes = new Set();
+const authFailures = new Map();
+let threat_model_active = false;
+let activeClassicalFlags = new Set();
+
 
 // user_id -> { ws, username, account_type, displayName }
 // One live connection per authenticated user_id. A second login for the
@@ -49,7 +55,7 @@ const tokens = new Map();
 const connections = new Map();
 
 // ---------------------------------------------------------------------------
-// QDS session â€” shared simulation run. No role state stored here at all.
+// QDS session Ã¢â‚¬â€ shared simulation run. No role state stored here at all.
 // ---------------------------------------------------------------------------
 
 const qdsSession = {
@@ -57,7 +63,7 @@ const qdsSession = {
 };
 
 // ---------------------------------------------------------------------------
-// QDS ROUND_UPDATE engine â€” same shape as before. Runs every 900 ms so
+// QDS ROUND_UPDATE engine Ã¢â‚¬â€ same shape as before. Runs every 900 ms so
 // every connected client sees the same live simulation stream. The alice/
 // bob/charlie labels here refer to the QDS *protocol* roles in the
 // simulation, not to any logged-in user account.
@@ -140,8 +146,25 @@ export function spawnSimulator(attackType) {
       if (channelWindow.length > 50) channelWindow.shift();
       for (const conn of connections.values()) {
         const frame = filterFrameForAccountType(full, conn.account_type);
-        frame.current_roles = currentRoles;
-        send(conn.ws, 'ROUND_UPDATE', frame);
+          frame.current_roles = currentRoles;
+          
+          let combinedFlags = Array.from(activeClassicalFlags);
+          let threatActive = threat_model_active;
+
+          // Map C++ simulation flags to frontend visual flags
+          const eFlags = frame.event_flags || [];
+          if (eFlags.includes('replay_detected')) {
+             combinedFlags.push('control_replay_detected');
+             threatActive = true;
+          }
+          if (eFlags.includes('mac_verification_failure') || eFlags.includes('unauthorized_verifier_detected')) {
+             combinedFlags.push('brute_force_suspected');
+             threatActive = true;
+          }
+          
+          frame.classical_flags = combinedFlags;
+          frame.threat_model_active = threatActive;
+          send(conn.ws, 'ROUND_UPDATE', frame);
       }
     } else if (simProcess === null) {
       clearInterval(simInterval);
@@ -157,7 +180,7 @@ spawnSimulator('none');
 
 
 // ---------------------------------------------------------------------------
-// HTTP â€” POST /api/auth/login only.
+// HTTP Ã¢â‚¬â€ POST /api/auth/login only.
 // ---------------------------------------------------------------------------
 
 const server = http.createServer((req, res) => {
@@ -216,7 +239,7 @@ const server = http.createServer((req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// WebSocket â€” one connection per authenticated user. Auth is verified from
+// WebSocket Ã¢â‚¬â€ one connection per authenticated user. Auth is verified from
 // the token (query param or an AUTH frame), never from anything the client
 // claims about its own identity or role.
 // ---------------------------------------------------------------------------
@@ -261,22 +284,64 @@ wss.on('connection', (ws, req) => {
   if (identity) registerConnection();
 
   ws.on('message', (raw) => {
+    const rawStr = raw.toString();
+    const now = Date.now();
     let msg;
     try {
-      msg = JSON.parse(raw.toString());
+      msg = JSON.parse(rawStr);
     } catch {
       return;
     }
+
+    const triggerFlag = (flag) => {
+      activeClassicalFlags.add(flag);
+      threat_model_active = true;
+      setTimeout(() => {
+        activeClassicalFlags.delete(flag);
+        if (activeClassicalFlags.size === 0) threat_model_active = false;
+      }, 5000);
+    };
 
     if (msg.command === 'AUTH') {
       if (msg.token && tokens.has(msg.token)) {
         identity = tokens.get(msg.token);
         registerConnection();
+      } else {
+        const ip = req.socket.remoteAddress;
+        const count = (authFailures.get(ip) || 0) + 1;
+        authFailures.set(ip, count);
+        if (count > 3) triggerFlag('brute_force_suspected');
       }
       return;
     }
 
-    if (!identity) return; // ignore everything else from unauthenticated sockets
+    if (!identity) {
+      const ip = req.socket.remoteAddress;
+      const count = (authFailures.get(ip) || 0) + 1;
+      authFailures.set(ip, count);
+      if (count > 3) triggerFlag('brute_force_suspected');
+      return;
+    }
+
+    // B1: Burst Detection
+    const uid = identity.user_id;
+    if (!commandTimestamps.has(uid)) commandTimestamps.set(uid, []);
+    const stamps = commandTimestamps.get(uid);
+    stamps.push(now);
+    while (stamps.length > 0 && stamps[0] < now - 1000) stamps.shift();
+    if (stamps.length > 10) triggerFlag('control_channel_burst');
+
+    // B2: Replay Guard
+    if (msg.command !== 'PING' && msg.type !== 'PONG' && msg.command !== 'START') {
+      
+      const hash = crypto.createHash('sha256').update(rawStr).digest('hex');
+      if (recentHashes.has(hash)) {
+        triggerFlag('control_replay_detected');
+      } else {
+        recentHashes.add(hash);
+        setTimeout(() => recentHashes.delete(hash), 5000);
+      }
+    }
 
     if (msg.command === 'PING') {
       send(ws, 'PONG', {});
@@ -297,7 +362,7 @@ wss.on('connection', (ws, req) => {
 
     // --- Messaging --------------------------------------------------------
     // Any authenticated participant may send a message to any other online
-    // participant. The sender/receiver relationship is per-message only â€”
+    // participant. The sender/receiver relationship is per-message only Ã¢â‚¬â€
     // there are no permanent protocol role slots. All remaining connected
     // participants (not sender, not receiver, not admin) become the
     // verification side automatically, per the QDS protocol.
@@ -494,3 +559,4 @@ server.listen(PORT, HOST, () => {
   console.log(`QDS session server listening on http://${HOST}:${PORT} (WS on the same port)`);
   console.log(`Session ID for this run: ${qdsSession.session_id}`);
 });
+

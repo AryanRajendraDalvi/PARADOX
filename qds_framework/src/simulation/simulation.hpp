@@ -19,6 +19,8 @@
 #include <random>
 #include <string>
 #include <functional>
+#include <deque>
+#include <numeric>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SimConfig — all tunable parameters for a simulation run
@@ -79,6 +81,12 @@ private:
     uint32_t round_id_       = 0;
     int      mismatch_count_ = 0;
     int      signing_rounds_ = 0;
+    
+    // A2, A3, A5 trackers
+    std::deque<double> recent_qbers_;
+    std::deque<double> recent_mermins_;
+    std::deque<bool> recent_fp_;
+    std::deque<bool> recent_fn_;
 
     // Per-round execution paths
     void run_signing_round(const SigningBatch& batch, RoundAccumulators& acc,

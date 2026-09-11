@@ -52,9 +52,9 @@ export default function SecurityLedger({ frame }) {
                   animate={{ scale: 1, opacity: 1, rotate: -8 }}
                   exit={{ opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 14 }}
-                  className="w-12 h-12 rounded-full border-2 border-phosphor flex items-center justify-center shadow-glow-phosphor"
+                  className="w-12 h-12 rounded-full border-2 border-green-500 flex items-center justify-center shadow-sm shadow-green-500/20"
                 >
-                  <span className="text-phosphor text-lg leading-none">✓</span>
+                  <span className="text-green-500 text-lg leading-none">✓</span>
                 </motion.div>
               ) : (
                 <motion.div
@@ -63,18 +63,18 @@ export default function SecurityLedger({ frame }) {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 10 }}
-                  className="w-12 h-12 rounded-full border-2 border-crimson flex items-center justify-center shadow-glow-crimson"
+                  className="w-12 h-12 rounded-full border-2 border-red-500 flex items-center justify-center shadow-sm shadow-red-500/20"
                 >
-                  <span className="text-crimson text-lg leading-none">✕</span>
+                  <span className="text-red-500 text-lg leading-none">✕</span>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           <div className="min-w-0">
-            <div className={`text-xs font-mono ${macVerified ? 'text-phosphor' : 'text-crimson'}`}>
+            <div className={`text-xs  ${macVerified ? 'text-green-500' : 'text-red-500'}`}>
               MAC {macVerified ? 'VERIFIED' : 'FORGED / REJECTED'}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 truncate">{truncateHex(macTag)}</div>
+            <div className="text-[11px]  text-slate-500 truncate">{truncateHex(macTag)}</div>
           </div>
         </div>
 
@@ -83,15 +83,15 @@ export default function SecurityLedger({ frame }) {
         {/* Merkle commit */}
         <div className="flex-1 flex items-center gap-3">
           <motion.div
-            className="w-12 h-12 shrink-0 rounded-md border border-cyan/40 flex items-center justify-center bg-cyan/5"
-            animate={pulse ? { scale: [1, 1.18, 1], boxShadow: ['0 0 0px #00f3ff', '0 0 22px #00f3ff', '0 0 0px #00f3ff'] } : {}}
+            className="w-12 h-12 shrink-0 rounded-md border border-blue-500/40 flex items-center justify-center bg-blue-500/5"
+            animate={pulse ? { scale: [1, 1.18, 1], boxShadow: ['0 0 0px #3B82F6', '0 0 22px #3B82F6', '0 0 0px #3B82F6'] } : {}}
             transition={{ duration: 0.9 }}
           >
-            <span className="text-cyan text-[10px] font-mono">B{batchId ?? '—'}</span>
+            <span className="text-blue-500 text-[10px] ">B{batchId ?? '—'}</span>
           </motion.div>
           <div className="min-w-0">
-            <div className="text-xs font-mono text-cyan">MERKLE ROOT</div>
-            <div className="text-[11px] font-mono text-slate-500 truncate">{truncateHex(displayedRoot)}</div>
+            <div className="text-xs  text-blue-500">MERKLE ROOT</div>
+            <div className="text-[11px]  text-slate-500 truncate">{truncateHex(displayedRoot)}</div>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
@@ -16,10 +16,10 @@ export default {
         amber: '#ffb800',
         violet: '#9d00ff'
       },
-      fontFamily: {
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', '"Inter"', 'system-ui', 'sans-serif']
+            fontFamily: {
+        mono: ['"SUSE"', 'sans-serif'],
+        sans: ['"SUSE"', 'sans-serif'],
+        display: ['"SUSE"', 'sans-serif']
       },
       boxShadow: {
         'glow-cyan': '0 0 20px rgba(0, 243, 255, 0.35)',
@@ -53,3 +53,4 @@ export default {
   },
   plugins: []
 };
+

@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_META = {
   sending:   { label: 'Sending...',   color: '#8ea0c9' },
-  sent:      { label: 'Sent',        color: '#ffb800' },
-  delivered: { label: 'Delivered',   color: '#00ff66' },
-  failed:    { label: 'Failed',      color: '#ff003c' }
+  sent:      { label: 'Sent',        color: '#F59E0B' },
+  delivered: { label: 'Delivered',   color: '#22C55E' },
+  failed:    { label: 'Failed',      color: '#DC2626' }
 };
 
 function formatTime(ts) {
@@ -66,15 +66,15 @@ function MessageBubble({ msg, isOwn, sendCommand, latestRound, theme }) {
         className={`max-w-[80%] rounded-2xl px-4 py-3 border ${theme === 'dark' ? (isOwn ? 'border-white/40 bg-transparent' : 'border-white/20 bg-transparent') : (isOwn ? 'border-slate-300 bg-slate-100' : 'border-slate-200 bg-white')}`}
       >
         <div className="flex items-center gap-2 mb-1">
-          <span className={`text-[10px] font-mono uppercase tracking-wide ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+          <span className={`text-[10px]  uppercase tracking-wide ${theme === 'dark' ? 'text-slate-500' : (theme === 'dark' ? 'text-slate-400' : 'text-slate-500')}`}>
             {msg.from_display_name ?? (isOwn ? 'You' : 'Unknown')}
             {msg.to_display_name && !isOwn && (
               <span className="text-slate-600"> -> {msg.to_display_name}</span>
             )}
-            {msg.verification && <span className="text-violet ml-1">- verification copy</span>}
-            {msg.monitored && <span className="text-amber ml-1">- monitored</span>}
+            {msg.verification && <span className={`${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'} ml-1`}>- verification copy</span>}
+            {msg.monitored && <span className={`${theme === 'dark' ? 'text-amber-500' : 'text-amber-600'} ml-1`}>- monitored</span>}
           </span>
-          <span className="text-[9px] text-slate-600 font-mono">{formatTime(msg.ts)}</span>
+          <span className="text-[9px] text-slate-600 ">{formatTime(msg.ts)}</span>
         </div>
         
         {(() => {
@@ -83,49 +83,49 @@ function MessageBubble({ msg, isOwn, sendCommand, latestRound, theme }) {
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
              </svg>
           );
-          let color = "bg-surface border-white/10";
+          let color = theme === 'dark' ? "bg-slate-800 border-white/10" : "bg-slate-100 border-slate-300";
           let status = "Awaiting QDS correlation check...";
           let title = "ENCRYPTED QUANTUM PAYLOAD";
 
           if (msg.failure_type === 'instant') {
-             icon = (<svg className="w-4 h-4 text-crimson" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
-             color = "bg-crimson/10 border-crimson/30";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+             color = theme === 'dark' ? "bg-red-500/10 border-red-500/30" : "bg-red-100 border-red-300";
              status = msg.failure_reason;
              title = "REJECTED";
           } else if (msg.failure_type === 'stalled') {
-             icon = (<svg className="w-4 h-4 text-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
-             color = "bg-amber/10 border-amber/30 animate-pulse";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-amber-500' : 'text-amber-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
+             color = `${theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-100 border-amber-300'} animate-pulse`;
              status = msg.failure_reason;
           } else if (msg.failure_type === 'gradual') {
-             icon = (<svg className="w-4 h-4 text-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
-             color = "bg-amber/10 border-amber/30 animate-pulse";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-amber-500' : 'text-amber-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>);
+             color = `${theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-100 border-amber-300'} animate-pulse`;
              status = msg.failure_reason;
           } else if (msg.failure_type === 'rogue-verifier') {
-             icon = (<svg className="w-4 h-4 text-[#ffb800]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
-             color = "bg-[#ffb800]/10 border-[#ffb800]/30";
-             status = "Quantum Correlation: VALID ✓ — Verifier MAC: FAILED ✗";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-amber-500' : 'text-amber-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
+             color = theme === 'dark' ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-100 border-amber-300";
+             status = "Quantum Correlation: VALID âœ“ â€” Verifier MAC: FAILED âœ—";
              title = "UNAUTHORIZED VERIFICATION";
           } else if (msg.failure_type === 'broken-seal') {
-             icon = (<svg className="w-4 h-4 text-crimson" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.5 10.5L21 3m-4.5 9v1.5a7.5 7.5 0 11-15 0v-6a7.5 7.5 0 0113-5" /></svg>);
-             color = "bg-crimson/10 border-crimson/30";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.5 10.5L21 3m-4.5 9v1.5a7.5 7.5 0 11-15 0v-6a7.5 7.5 0 0113-5" /></svg>);
+             color = theme === 'dark' ? "bg-red-500/10 border-red-500/30" : "bg-red-100 border-red-300";
              status = "Quantum Correlation: MATCHED \u2713 \u2014 Classical MAC: FAILED \u2717";
              title = "AUTHENTICATION FAILED";
           } else if (!isVisuallyLocked) {
-             icon = (<svg className="w-4 h-4 text-phosphor" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>);
-             color = "bg-phosphor/10 border-phosphor/30";
+             icon = (<svg className={`w-4 h-4 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>);
+             color = theme === 'dark' ? "bg-emerald-500/10 border-emerald-500/30" : "bg-emerald-100 border-emerald-300";
              status = "Quantum Signature Verified";
              title = "PAYLOAD DECRYPTED";
           }
 
           if (isVisuallyLocked || msg.failure_type === 'broken-seal' || msg.failure_type === 'rogue-verifier' || !isVisuallyLocked) {
             return (
-              <div className="flex items-center gap-3 mb-3 bg-black/20 p-2 rounded border border-white/5">
+              <div className={`flex items-center gap-3 mb-3 p-2 rounded border ${theme === 'dark' ? 'bg-black/20 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
                  <div className={`w-8 h-8 rounded flex items-center justify-center border ${color}`}>
                    {icon}
                  </div>
                  <div className="overflow-hidden">
-                   <div className="text-[10px] font-mono text-slate-400 truncate">{title}</div>
-                   <div className={`text-[9px] font-mono truncate ${msg.failure_type === 'broken-seal' || msg.failure_type === 'instant' ? 'text-crimson' : msg.failure_type ? 'text-amber' : 'text-slate-500'}`}>{status}</div>
+                   <div className="text-[10px]  text-slate-400 truncate">{title}</div>
+                   <div className={`text-[9px]  truncate ${msg.failure_type === 'broken-seal' || msg.failure_type === 'instant' ? theme === 'dark' ? 'text-red-400' : 'text-red-600' : msg.failure_type ? theme === 'dark' ? 'text-amber-500' : 'text-amber-600' : 'text-slate-500'}`}>{status}</div>
                  </div>
               </div>
             );
@@ -139,60 +139,60 @@ function MessageBubble({ msg, isOwn, sendCommand, latestRound, theme }) {
 
         {/* VERIFICATION WIDGETS */}
         {msg.locked && !isOwn && !msg.verification && !msg.monitored && (
-          <div className="mt-3 p-2 rounded bg-surface/50 border border-cyan/20">
-            <div className="text-[10px] text-slate-400 font-mono mb-1">QDS SIGNATURE STATE:</div>
-            <div className="text-xs text-cyan font-mono truncate">My Hash: {msg.hash}</div>
-            <div className="text-xs text-cyan font-mono truncate mb-2">My MAC Tag: {msg.valid_mac}</div>
+          <div className={`mt-3 p-2 rounded ${theme === 'dark' ? 'bg-slate-800/80' : 'bg-slate-100/80'} border ${theme === 'dark' ? 'border-blue-400/20' : 'border-blue-600/20'}`}>
+            <div className="text-[10px] text-slate-400  mb-1">QDS SIGNATURE STATE:</div>
+            <div className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}  truncate`}>My Hash: {msg.hash}</div>
+            <div className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}  truncate mb-2`}>My MAC Tag: {msg.valid_mac}</div>
             
             {msg.charlie_shared ? (
                <>
-                 <div className="text-[10px] text-violet font-mono mt-2 mb-1">VERIFIER SHARE RECEIVED:</div>
-                 <div className="text-xs text-violet font-mono truncate mb-3">MAC Tag: {msg.charlie_mac}</div>
+                 <div className={`text-[10px] ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'}  mt-2 mb-1`}>VERIFIER SHARE RECEIVED:</div>
+                 <div className={`text-xs ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'}  truncate mb-3`}>MAC Tag: {msg.charlie_mac}</div>
                  
                  {!hasStarted && !msg.verification_failed ? (
                     <button 
                       onClick={startVerification}
-                      className="w-full text-xs font-mono bg-cyan/10 hover:bg-cyan/20 text-cyan border border-cyan/30 rounded py-1 transition-colors"
+                      className={`w-full text-xs  ${theme === 'dark' ? 'bg-blue-400/10 hover:bg-blue-400/20' : 'bg-blue-600/10 hover:bg-blue-600/20'} ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} border border-cyan/30 rounded py-1 transition-colors`}
                     >
                       EXECUTE QUANTUM VERIFICATION
                     </button>
                  ) : hasStarted && verifyPhase > 0 ? (
-                    <div className="text-[10px] font-mono text-cyan space-y-1">
+                    <div className={`text-[10px]  ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} space-y-1`}>
                       {verifyPhase >= 1 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <span className="text-slate-400">1. Correlating GHZ State...</span> [OK]
+                          <span className={`${theme === 'dark' ? (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') : 'text-slate-500'}`}>1. Correlating GHZ State...</span> [OK]
                         </motion.div>
                       )}
                       {verifyPhase >= 2 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <span className="text-slate-400">2. Alice's classical broadcast:</span> |{aBits}>
+                          <span className={`${theme === 'dark' ? (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') : 'text-slate-500'}`}>2. Alice's classical broadcast:</span> |{aBits}>
                         </motion.div>
                       )}
                       {verifyPhase >= 3 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <span className="text-slate-400">3. Applying Paulis:</span> Bob({bPauli}), Charlie({cPauli})
+                          <span className={`${theme === 'dark' ? (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') : 'text-slate-500'}`}>3. Applying Paulis:</span> Bob({bPauli}), Charlie({cPauli})
                         </motion.div>
                       )}
                       {verifyPhase >= 4 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <span className="text-slate-400">4. Charlie's measurement:</span> {cOut} -> Merging pattern...
+                          <span className={`${theme === 'dark' ? (theme === 'dark' ? 'text-slate-400' : 'text-slate-500') : 'text-slate-500'}`}>4. Charlie's measurement:</span> {cOut} -> Merging pattern...
                         </motion.div>
                       )}
                       
                       {msg.verification_failed && (msg.failure_type === 'instant' || msg.failure_type === 'broken-seal' || (msg.failure_type === 'stalled' && verifyPhase >= 3) || (msg.failure_type === 'gradual' && verifyPhase >= 4)) && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-crimson mt-2 font-bold uppercase animate-pulse">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`${theme === 'dark' ? 'text-red-400' : 'text-red-600'} mt-2 font-bold uppercase animate-pulse`}>
                           Verification Failed: {msg.failure_reason || 'MAC MISMATCH'}!
                         </motion.div>
                       )}
                       
                       {verifyPhase >= 5 && !msg.verification_failed && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-green-400 mt-2 font-bold uppercase animate-pulse">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'} mt-2 font-bold uppercase animate-pulse`}>
                           QDS SIGNATURE VALID!
                         </motion.div>
                       )}
                     </div>
                  ) : msg.verification_failed && msg.failure_type === 'instant' ? (
-                    <div className="text-[10px] text-crimson animate-pulse uppercase">Verification Failed: {msg.failure_reason || 'MAC MISMATCH'}!</div>
+                    <div className={`text-[10px] ${theme === 'dark' ? 'text-red-400' : 'text-red-600'} animate-pulse uppercase`}>Verification Failed: {msg.failure_reason || 'MAC MISMATCH'}!</div>
                  ) : null}
                </>
             ) : (
@@ -202,17 +202,17 @@ function MessageBubble({ msg, isOwn, sendCommand, latestRound, theme }) {
         )}
 
         {msg.locked && msg.verification && !msg.monitored && (
-          <div className="mt-3 p-2 rounded bg-surface/50 border border-violet/20">
-            <div className="text-[10px] text-slate-400 font-mono mb-1">QDS VERIFIER SHARE:</div>
-            <div className="text-xs text-violet font-mono truncate">Message Hash: {msg.hash}</div>
-            <div className="text-xs text-violet font-mono truncate mb-2">My MAC Tag: {msg.charlie_mac}</div>
+          <div className={`mt-3 p-2 rounded ${theme === 'dark' ? 'bg-slate-800/80' : 'bg-slate-100/80'} border ${theme === 'dark' ? 'border-[#60A5FA]/30' : 'border-[#2563EB]/30'}`}>
+            <div className="text-[10px] text-slate-400  mb-1">QDS VERIFIER SHARE:</div>
+            <div className={`text-xs ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'}  truncate`}>Message Hash: {msg.hash}</div>
+            <div className={`text-xs ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'}  truncate mb-2`}>My MAC Tag: {msg.charlie_mac}</div>
             
             {msg.charlie_shared ? (
                <div className="text-[10px] text-slate-500 uppercase">Share transmitted to Receiver.</div>
             ) : (
                <button 
                  onClick={() => sendCommand({ command: 'TRANSMIT_SHARE', message_id: msg.id })}
-                 className="w-full text-xs font-mono bg-violet/10 hover:bg-violet/20 text-violet border border-violet/30 rounded py-1 transition-colors"
+                 className={`w-full text-xs  ${theme === 'dark' ? 'bg-[#60A5FA]/10 hover:bg-[#60A5FA]/20' : 'bg-[#2563EB]/10 hover:bg-[#2563EB]/20'} ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'} border ${theme === 'dark' ? 'border-[#60A5FA]/30' : 'border-[#2563EB]/30'} rounded py-1 transition-colors`}
                >
                  TRANSMIT SHARE TO RECEIVER
                </button>
@@ -223,7 +223,7 @@ function MessageBubble({ msg, isOwn, sendCommand, latestRound, theme }) {
         {isOwn && meta && (
           <div className="flex items-center gap-1 mt-1">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
-            <span className="text-[10px] font-mono" style={{ color: meta.color }}>
+            <span className="text-[10px] " style={{ color: meta.color }}>
               {meta.label}
             </span>
             {msg.status === 'failed' && msg.reason && (
@@ -268,20 +268,20 @@ export default function ChatPanel({
     : `Message ${recipientInfo?.displayName ?? selectedRecipient}...`;
 
   return (
-    <div className="flex flex-col flex-1 h-full bg-transparent">
+    <div className="flex flex-col flex-1 h-full bg-transparent" style={{ fontFamily: "'SUSE', sans-serif" }}>
       {!hideHeader && (
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
           <span className="text-xs tracking-wide text-slate-500">
             {recipientInfo
-              ? <span>CONVERSATION WITH <span className="text-slate-300">{recipientInfo.displayName.toUpperCase()}</span></span>
+              ? <span>CONVERSATION WITH <span className={`${theme === 'dark' ? (theme === 'dark' ? 'text-slate-300' : 'text-slate-600') : 'text-slate-600'}`}>{recipientInfo.displayName.toUpperCase()}</span></span>
               : 'CONVERSATION'}
           </span>
           <div className="flex items-center gap-1.5">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${connection === 'live' ? 'bg-phosphor' : 'bg-crimson'}`}
-              style={{ boxShadow: connection === 'live' ? '0 0 6px #00ff66' : '0 0 6px #ff003c' }}
+              className={`w-1.5 h-1.5 rounded-full ${connection === 'live' ? theme === 'dark' ? 'bg-emerald-400' : 'bg-emerald-500' : theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`}
+              style={{ boxShadow: 'none' }}
             />
-            <span className={`text-[10px] font-mono ${connection === 'live' ? 'text-phosphor' : 'text-crimson'}`}>
+            <span className={`text-[10px]  ${connection === 'live' ? theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600' : theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
               {connection === 'live' ? 'CONNECTED TO SERVER' : connection === 'mock' ? 'NO SERVER - QDS DEMO ONLY' : 'CONNECTING...'}
             </span>
           </div>
@@ -303,13 +303,13 @@ export default function ChatPanel({
         
             {isDrawingGHZ && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex justify-end pl-8 mb-2 mt-2">
-                <div className="max-w-[80%] rounded-2xl px-4 py-3 border border-violet/30 bg-violet/5">
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 border ${theme === 'dark' ? 'border-[#60A5FA]/30' : 'border-[#2563EB]/30'} ${theme === 'dark' ? 'bg-[#60A5FA]/5' : 'bg-[#2563EB]/5'}`}>
                    <div className="flex items-center gap-2 mb-1">
-                     <span className="text-[10px] font-mono uppercase tracking-wide text-violet animate-pulse">
+                     <span className={`text-[10px]  uppercase tracking-wide ${theme === 'dark' ? 'text-[#60A5FA]' : 'text-[#2563EB]'} animate-pulse`}>
                        Allocating GHZ Resource Batch...
                      </span>
                    </div>
-                   <div className="text-[10px] font-mono text-slate-400">
+                   <div className="text-[10px]  text-slate-400">
                      Requesting fresh quantum correlation from hardware...
                    </div>
                 </div>
@@ -317,7 +317,7 @@ export default function ChatPanel({
             )}
 </AnimatePresence>
         {messages.length === 0 && (
-          <div className="h-full flex items-center justify-center text-xs text-slate-600 font-mono">
+          <div className="h-full flex items-center justify-center text-xs text-slate-600 ">
             No messages yet
           </div>
         )}
@@ -329,7 +329,7 @@ export default function ChatPanel({
           onChange={(e) => setDraft(e.target.value)}
           disabled={!canSend}
           placeholder={placeholder}
-          className={`flex-1 bg-transparent border-none outline-none font-mono text-sm px-4 ${theme === 'dark' ? 'text-blue-400 placeholder:text-blue-400/50' : 'text-slate-800 placeholder:text-slate-400'}`}
+          className={`flex-1 bg-transparent border-none outline-none  text-sm px-4 ${theme === 'dark' ? 'text-blue-400 placeholder:text-blue-400/50' : 'text-slate-800 placeholder:text-slate-400'}`}
         />
         <button
           type="submit"
@@ -342,3 +342,5 @@ export default function ChatPanel({
     </div>
   );
 }
+
+

@@ -3,13 +3,18 @@
 with open('src/hooks/useSocket.js', 'r', encoding='utf-8') as f:
     text = f.read()
 
-unlock_regex = r"case 'ONLINE_USERS':"
-unlock_replacement = """case 'MESSAGE_UNLOCK':
-          setMessages((prev) => prev.map(m => m.id === payload.message_id ? { ...m, locked: false } : m));
-          return;
+send_old = """  const sendCommand = useCallback((cmd) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(cmd));
+    } else if (mockRef.current) {"""
 
-        case 'ONLINE_USERS':"""
+send_new = """  const sendCommand = useCallback((cmd) => {
+    console.log("SENDING COMMAND:", cmd);
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(cmd));
+    } else if (mockRef.current) {"""
 
-new_text = re.sub(unlock_regex, unlock_replacement, text)
+text = text.replace(send_old, send_new)
+
 with open('src/hooks/useSocket.js', 'w', encoding='utf-8') as f:
-    f.write(new_text)
+    f.write(text)

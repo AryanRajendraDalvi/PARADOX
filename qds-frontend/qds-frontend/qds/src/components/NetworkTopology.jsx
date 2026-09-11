@@ -23,7 +23,7 @@ function PhotonStream({ from, to, color, speed = 1.4, jitter = 0, count = 3, key
             key={`${keyPrefix}-${i}`}
             r={3.2}
             fill={color}
-            style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+            
             initial={{ cx: from.x, cy: from.y, opacity: 0 }}
             animate={{
               cx: [from.x, lerp(from.x, to.x, 0.5) + (jitter ? (Math.random() - 0.5) * jitter : 0), to.x],
@@ -58,18 +58,18 @@ function FiberLine({ from, to, color = '#0891a8', width = 1.5, dashed = false })
   );
 }
 
-function NodeDot({ node, color = '#00f3ff', size = 8 }) {
+function NodeDot({ node, color = '#2563EB', size = 8, labelColor = '#475569' }) {
   return (
     <g>
       <circle cx={node.x} cy={node.y} r={size + 6} fill={color} opacity={0.12} />
-      <circle cx={node.x} cy={node.y} r={size} fill={color} style={{ filter: `drop-shadow(0 0 6px ${color})` }} />
+      <circle cx={node.x} cy={node.y} r={size} fill={color}  />
       <text
         x={node.x}
         y={node.y + size + 16}
         textAnchor="middle"
-        className="font-mono"
+        className=""
         fontSize="10"
-        fill="#8ea0c9"
+        fill={labelColor}
         letterSpacing="0.5"
       >
         {node.label}
@@ -85,35 +85,44 @@ function NodeDot({ node, color = '#00f3ff', size = 8 }) {
  * and `auth.mac_verified` from the latest ROUND_UPDATE frame to drive
  * the attack-specific animation layer.
  */
-export default function NetworkTopology({ frame, compact = false }) {
+export default function NetworkTopology({ frame, compact = false, theme = 'light' }) {
   const attack = frame?.attack?.type ?? 'none';
   const attackActive = frame?.attack?.active ?? false;
   const macVerified = frame?.auth?.mac_verified ?? true;
   const height = compact ? 350 : 380;
 
-  const cyan = '#00f3ff';
+  const nodeBlue = '#2563EB';
+  const nodeConnected = '#16A34A';
+  const nodeDisconnected = '#94A3B8';
+  const channelClassical = '#64748B';
+  const channelQuantum = '#2563EB';
+  const labelColor = theme === 'dark' ? '#94A3B8' : '#475569';
+
+
+  
 
   return (
-    <div className="relative w-full rounded-lg border border-white/5 bg-surface/60 overflow-hidden">
+    <div className={`relative w-full rounded-lg border overflow-hidden ${theme === 'dark' ? 'border-slate-700/50 bg-[#111827]' : 'border-slate-200 bg-[#F8FAFC]'}`}>
       <svg viewBox={`0 0 600 ${height}`} className="w-full h-auto">
         {/* Background grid */}
         <defs>
           <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#0f1526" strokeWidth="1" />
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke={theme === 'dark' ? '#374151' : 'transparent'} strokeWidth="1" />
           </pattern>
         </defs>
+        <rect width="600" height={height} fill={theme === 'dark' ? '#111827' : '#F8FAFC'} />
         <rect width="600" height={height} fill="url(#grid)" />
 
         {/* Quantum fiber lines */}
-        <FiberLine from={NODES.source} to={NODES.alice} color={cyan} />
-        <FiberLine from={NODES.source} to={NODES.bob} color={cyan} />
-        <FiberLine from={NODES.source} to={NODES.charlie} color={cyan} />
+        <FiberLine from={NODES.source} to={NODES.alice} color={channelQuantum} />
+          <FiberLine from={NODES.source} to={NODES.bob} color={channelQuantum} />
+          <FiberLine from={NODES.source} to={NODES.charlie} color={channelQuantum} />
 
         {/* Classical authenticated channel â€” dashed amber, connects the parties' broadcasts */}
-        <FiberLine from={NODES.alice} to={{ x: NODES.alice.x, y: NODES.alice.y + 30 }} color="#ffb800" dashed />
+        <FiberLine from={NODES.alice} to={{ x: NODES.alice.x, y: NODES.alice.y + 30 }} color={channelClassical} dashed />
         <path
           d={`M ${NODES.alice.x} ${NODES.alice.y + 30} L ${NODES.bob.x} ${NODES.bob.y + 40} L ${NODES.charlie.x} ${NODES.charlie.y + 30}`}
-          stroke={macVerified ? '#ffb800' : '#ff003c'}
+          stroke={macVerified ? '#F59E0B' : '#DC2626'}
           strokeWidth={1.5}
           strokeDasharray="5 5"
           fill="none"
@@ -123,9 +132,9 @@ export default function NetworkTopology({ frame, compact = false }) {
         {/* Baseline photon streams (quiet unless overridden by an attack effect below) */}
         {attack !== 'blind' && (
           <>
-            <PhotonStream from={NODES.source} to={NODES.alice} color={cyan} keyPrefix="a" count={attackActive ? 2 : 3} />
-            <PhotonStream from={NODES.source} to={NODES.bob} color={cyan} keyPrefix="b" count={attackActive ? 2 : 3} />
-            <PhotonStream from={NODES.source} to={NODES.charlie} color={cyan} keyPrefix="c" count={attackActive ? 2 : 3} />
+            <PhotonStream from={NODES.source} to={NODES.alice} color={channelQuantum} keyPrefix="a" count={attackActive ? 2 : 3} />
+            <PhotonStream from={NODES.source} to={NODES.bob} color={channelQuantum} keyPrefix="b" count={attackActive ? 2 : 3} />
+            <PhotonStream from={NODES.source} to={NODES.charlie} color={channelQuantum} keyPrefix="c" count={attackActive ? 2 : 3} />
           </>
         )}
 
@@ -140,17 +149,17 @@ export default function NetworkTopology({ frame, compact = false }) {
         </AnimatePresence>
 
         {/* Nodes drawn last so they sit above beams */}
-        <NodeDot node={NODES.source} color="#00f3ff" size={9} />
-        <NodeDot node={NODES.alice} color="#00f3ff" size={7} />
-        <NodeDot node={NODES.bob} color="#00f3ff" size={7} />
-        <NodeDot node={NODES.charlie} color="#00f3ff" size={7} />
+        <NodeDot node={NODES.source} color={nodeBlue} size={9} labelColor={labelColor} />
+        <NodeDot node={NODES.alice} color={nodeConnected} size={7} labelColor={labelColor} />
+        <NodeDot node={NODES.bob} color={nodeConnected} size={7} labelColor={labelColor} />
+        <NodeDot node={NODES.charlie} color={attack === "rogue_verifier" ? nodeDisconnected : nodeConnected} size={7} labelColor={labelColor} />
       </svg>
 
-      <div className="absolute top-2 right-3 flex items-center gap-1.5 text-[10px] font-mono">
+      <div className="absolute top-2 right-3 flex items-center gap-1.5 text-[10px] ">
         <span
-          className={`w-1.5 h-1.5 rounded-full ${attackActive ? 'bg-crimson animate-pulseGlow' : 'bg-phosphor'}`}
+          className={`w-1.5 h-1.5 rounded-full ${attackActive ? 'bg-[#DC2626] animate-pulse' : 'bg-[#16A34A]'}`}
         />
-        <span className={attackActive ? 'text-crimson' : 'text-phosphor'}>
+        <span className={attackActive ? 'text-[#DC2626]' : 'text-[#16A34A]'}>
           {attackActive ? `ATTACK: ${attack.toUpperCase()}` : 'CHANNEL NOMINAL'}
         </span>
       </div>
@@ -168,19 +177,19 @@ function InterceptOverlay() {
         cy={eveY}
         r={9}
         fill="none"
-        stroke="#ff003c"
+        stroke="#DC2626"
         strokeWidth={2}
         animate={{ r: [7, 11, 7] }}
         transition={{ duration: 0.6, repeat: Infinity }}
       />
-      <text x={eveX} y={eveY - 16} textAnchor="middle" fontSize="9" fill="#ff003c" className="font-mono">
+      <text x={eveX} y={eveY - 16} textAnchor="middle" fontSize="9" fill="#DC2626" className="">
         EVE
       </text>
       {[0, 1, 2].map((i) => (
         <motion.circle
           key={i}
           r={2}
-          fill="#ff003c"
+          fill="#DC2626"
           initial={{ cx: eveX, cy: eveY, opacity: 1 }}
           animate={{
             cx: eveX + (Math.random() - 0.5) * 40,
@@ -202,14 +211,14 @@ function EntangleOverlay() {
         cy={NODES.source.y + 45}
         r={26}
         fill="none"
-        stroke="#9d00ff"
+        stroke="#6D28D9"
         strokeWidth={2}
         strokeDasharray="4 4"
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
         style={{ transformOrigin: `${NODES.source.x}px ${NODES.source.y + 45}px` }}
       />
-      <text x={NODES.source.x} y={NODES.source.y + 90} textAnchor="middle" fontSize="9" fill="#9d00ff" className="font-mono">
+      <text x={NODES.source.x} y={NODES.source.y + 90} textAnchor="middle" fontSize="9" fill="#6D28D9" className="">
         AUX PROBE
       </text>
     </motion.g>
@@ -226,15 +235,15 @@ function ReplayOverlay() {
         cy={by}
         r={20}
         fill="none"
-        stroke="#ffb800"
+        stroke="#F59E0B"
         strokeWidth={1.5}
         strokeDasharray="2 6"
         animate={{ rotate: -360 }}
         transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
         style={{ transformOrigin: `${bx}px ${by}px` }}
       />
-      <circle cx={bx} cy={by} r={4} fill="#ffb800" />
-      <text x={bx} y={by - 28} textAnchor="middle" fontSize="9" fill="#ffb800" className="font-mono">
+      <circle cx={bx} cy={by} r={4} fill="#F59E0B" />
+      <text x={bx} y={by - 28} textAnchor="middle" fontSize="9" fill="#F59E0B" className="">
         PHASE BUFFER
       </text>
     </motion.g>
@@ -252,7 +261,7 @@ function BatchNoiseOverlay() {
           y1={NODES.source.y}
           x2={to.x}
           y2={to.y}
-          stroke="#ffb800"
+          stroke="#F59E0B"
           strokeWidth={1}
           opacity={0.5}
           animate={{ x1: [NODES.source.x - 2, NODES.source.x + 2, NODES.source.x - 2] }}
@@ -293,13 +302,13 @@ function MacForgeOverlay() {
           y1={midY}
           x2={midX + Math.cos((i * Math.PI) / 2) * 18}
           y2={midY + Math.sin((i * Math.PI) / 2) * 18}
-          stroke="#ff003c"
+          stroke="#DC2626"
           strokeWidth={2}
           animate={{ opacity: [1, 0], x2: [midX, midX + Math.cos((i * Math.PI) / 2) * 26] }}
           transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
         />
       ))}
-      <text x={midX} y={midY + 30} textAnchor="middle" fontSize="9" fill="#ff003c" className="font-mono">
+      <text x={midX} y={midY + 30} textAnchor="middle" fontSize="9" fill="#DC2626" className="">
         MAC INTEGRITY BREACH
       </text>
     </motion.g>

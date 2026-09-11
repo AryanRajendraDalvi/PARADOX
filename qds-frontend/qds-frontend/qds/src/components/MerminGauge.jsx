@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const SIZE = 200;
-const RADIUS = 82;
+const SIZE = 240;
+const RADIUS = 100;
 const CLASSICAL_BOUND = 2;
 const TSIRELSON_BOUND = 4.0; // Tripartite GHZ Mermin bound
 const DOMAIN_MAX = 4;
@@ -60,7 +60,7 @@ export default function MerminGauge({ value, attack }) {
   });
 
   const violatesClassical = isActive && value > CLASSICAL_BOUND;
-  const needleColor = !isActive ? '#3a4766' : violatesClassical ? '#9d00ff' : '#00f3ff';
+  const needleColor = !isActive ? '#475569' : violatesClassical ? '#6D28D9' : '#2563EB';
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -76,9 +76,9 @@ export default function MerminGauge({ value, attack }) {
             strokeLinecap="round"
           />
           {/* Classical bound marker */}
-          <line {...classicalTick} stroke="#ffb800" strokeWidth={2.5} />
+          <line {...classicalTick} stroke="#F59E0B" strokeWidth={2.5} />
           {/* Tsirelson (quantum) bound marker */}
-          <line {...tsirelsonTick} stroke="#9d00ff" strokeWidth={2.5} />
+          <line {...tsirelsonTick} stroke="#6D28D9" strokeWidth={2.5} />
 
           {/* Numbers inside the dial */}
           {ticks.map((tick, i) => (
@@ -108,31 +108,31 @@ export default function MerminGauge({ value, attack }) {
               initial={{ x2: cx, y2: cy }}
               animate={{ x2: tip.x, y2: tip.y }}
               transition={{ type: 'spring', stiffness: 90, damping: 12 }}
-              style={{ filter: `drop-shadow(0 0 8px ${needleColor})` }}
+              
             />
           )}
-          <circle cx={cx} cy={cy} r={5} fill={isActive ? needleColor : '#3a4766'} />
+          <circle cx={cx} cy={cy} r={5} fill={isActive ? needleColor : '#475569'} />
         </svg>
 
         {!isActive && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface/70 rounded-lg">
-            <span className="text-[11px] tracking-wide text-slate-500 font-mono">OFFLINE</span>
+          <div className="absolute inset-x-0 top-1/2 -translate-y-[60%] flex flex-col items-center justify-center bg-surface/70 rounded-lg">
+            <span className="text-[11px] tracking-wide text-slate-500 ">OFFLINE</span>
             <span className="text-[9px] text-slate-600 mt-0.5">NON-MERMIN ROUND</span>
           </div>
         )}
 
         {isActive && (
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
-            <span className="font-mono text-2xl mono-nums" style={{ color: needleColor }}>
+          <div className="absolute inset-x-0 bottom-4 flex flex-col items-center">
+            <span className=" text-2xl mono-nums" style={{ color: needleColor }}>
               {value.toFixed(3)}
             </span>
             {violatesClassical && (
-              <span className="text-[10px] font-mono text-violet mt-0.5">NON-LOCAL CORRELATION</span>
+              <span className="text-[10px]  text-violet mt-0.5">NON-LOCAL CORRELATION</span>
             )}
           </div>
         )}
       </div>
-      <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500">
+      <div className="flex items-center gap-4 text-[10px]  text-slate-500">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-amber inline-block" /> classical 2.000
         </span>

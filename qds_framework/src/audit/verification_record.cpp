@@ -1,7 +1,5 @@
-#include "verification_record.hpp"
+﻿#include "verification_record.hpp"
 #include <cstring>
-
-// ─── Canonical serialization ──────────────────────────────────────────────────
 
 static void push_u32_le(std::vector<uint8_t>& out, uint32_t v) {
     for (int i = 0; i < 4; ++i) { out.push_back(v & 0xFF); v >>= 8; }
@@ -32,8 +30,6 @@ std::vector<uint8_t> VerificationRecord::serialize() const {
     return out;
 }
 
-// ─── JSON emission ────────────────────────────────────────────────────────────
-
 std::string VerificationRecord::to_json(
     const std::string& batch_type,
     const std::string& phase,
@@ -46,16 +42,18 @@ std::string VerificationRecord::to_json(
     double decoy_qber,
     double tau_hoeffding,
     double tau_cefb,
+    double composable_epsilon,
+    double fp_rate,
+    double fn_rate,
     const std::string& merkle_root,
     bool batch_committed,
     bool mac_verified,
     const std::string& mac_tag,
-      double latency_us, double throughput_hz) const
+    double latency_us, double throughput_hz) const
 {
     std::ostringstream o;
     o << std::fixed << std::setprecision(4);
 
-    // Build event_flags JSON array
     std::ostringstream flags;
     flags << "[";
     for (size_t i = 0; i < event_flags.size(); ++i) {
@@ -99,7 +97,10 @@ std::string VerificationRecord::to_json(
           << "\"mismatch_rate\":"  << mismatch_rate  << ","
           << "\"tau_hoeffding\":"  << tau_hoeffding  << ","
           << "\"tau_cefb\":"       << tau_cefb       << ","
-          << "\"mermin_value\":"   << mermin_str
+          << "\"mermin_value\":"   << mermin_str    << ","
+          << "\"composable_epsilon\":" << composable_epsilon << ","
+          << "\"fp_rate\":" << fp_rate << ","
+          << "\"fn_rate\":" << fn_rate
       << "},"
       << "\"attack\":{\"active\":" << (attack_active ? "true" : "false")
                     << ",\"type\":\"" << attack_type << "\"},"

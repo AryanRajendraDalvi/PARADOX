@@ -4,7 +4,7 @@ import PanelHeader from '../components/PanelHeader.jsx';
 import ArcGauge from '../components/ArcGauge.jsx';
 import NetworkTopology from '../components/NetworkTopology.jsx';
 
-const PAULI_COLOR = { I: '#0891a8', X: '#ff003c', Y: '#9d00ff', Z: '#ffb800' };
+const PAULI_COLOR = { I: '#0891a8', X: '#DC2626', Y: '#6D28D9', Z: '#F59E0B' };
 const PAULI_DESC = {
   I: 'Identity — no correction applied',
   X: 'Bit-flip correction',
@@ -27,7 +27,7 @@ function PauliUnit({ correction }) {
           className="w-20 h-20 rounded-xl border-2 flex items-center justify-center shrink-0"
           style={{ borderColor: color, background: `${color}14`, boxShadow: `0 0 18px ${color}44` }}
         >
-          <span className="font-display text-4xl" style={{ color }}>
+          <span className=" text-4xl" style={{ color }}>
             {c}
           </span>
         </motion.div>
@@ -58,7 +58,7 @@ export default function BobView({ frame, connection, embedded = false }) {
         <PauliUnit correction={bob?.correction_applied} />
         <div className="text-right">
           <div className="text-xs tracking-wide text-slate-500 mb-1">MEASURED OUTCOME</div>
-          <div className="font-mono text-3xl text-cyan mono-nums">{bob?.outcome ?? '—'}</div>
+          <div className=" text-3xl text-cyan mono-nums">{bob?.outcome ?? '—'}</div>
         </div>
       </div>
 

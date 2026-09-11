@@ -32,10 +32,10 @@ export default function OverviewMasterView({ frame, history, connection, sendCom
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-md border border-white/5 p-3">
               <div className="text-[10px] text-slate-500 mb-1">ALICE</div>
-              <div className="font-mono text-xs text-cyan mb-1">{alice?.basis ?? '—'}</div>
+              <div className=" text-xs text-cyan mb-1">{alice?.basis ?? '—'}</div>
               <div className="flex gap-1">
                 {(alice?.outcome_bits ?? []).map((b, i) => (
-                  <span key={i} className="font-mono text-lg text-slate-200">
+                  <span key={i} className=" text-lg text-slate-200">
                     {b}
                   </span>
                 ))}
@@ -43,15 +43,15 @@ export default function OverviewMasterView({ frame, history, connection, sendCom
             </div>
             <div className="rounded-md border border-white/5 p-3">
               <div className="text-[10px] text-slate-500 mb-1">BOB</div>
-              <div className="font-mono text-xs text-amber mb-1">
+              <div className=" text-xs text-amber mb-1">
                 {bob?.correction_applied ?? 'I'}
               </div>
-              <div className="font-mono text-lg text-slate-200">{bob?.outcome ?? '—'}</div>
+              <div className=" text-lg text-slate-200">{bob?.outcome ?? '—'}</div>
             </div>
             <div className="rounded-md border border-white/5 p-3">
               <div className="text-[10px] text-slate-500 mb-1">CHARLIE</div>
-              <div className="font-mono text-xs text-violet mb-1">{charlie?.basis ?? '—'}</div>
-              <div className="font-mono text-lg text-slate-200">{charlie?.outcome ?? '—'}</div>
+              <div className=" text-xs text-violet mb-1">{charlie?.basis ?? '—'}</div>
+              <div className=" text-lg text-slate-200">{charlie?.outcome ?? '—'}</div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
@@ -70,15 +70,15 @@ export default function OverviewMasterView({ frame, history, connection, sendCom
             <NetworkTopology frame={frame} compact />
             
             <div className="mt-4 p-3 rounded-lg border border-white/5 bg-black/40">
-              <div className="text-[10px] tracking-wide text-slate-500 mb-2 font-mono">SIMULATION PERFORMANCE METRICS</div>
+              <div className="text-[10px] tracking-wide text-slate-500 mb-2 ">SIMULATION PERFORMANCE METRICS</div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col">
                   <span className="text-[9px] text-slate-400">GHZ TELEPORTATION THROUGHPUT</span>
-                  <span className="font-mono text-cyan text-sm">{frame?.performance?.throughput_hz ? Math.round(frame.performance.throughput_hz).toLocaleString() : '---'} sigs/sec</span>
+                  <span className=" text-cyan text-sm">{frame?.performance?.throughput_hz ? Math.round(frame.performance.throughput_hz).toLocaleString() : '---'} sigs/sec</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[9px] text-slate-400">MEAN ROUND LATENCY</span>
-                  <span className="font-mono text-cyan text-sm">{frame?.performance?.latency_us ? frame.performance.latency_us.toFixed(2) : '---'} µs</span>
+                  <span className=" text-cyan text-sm">{frame?.performance?.latency_us ? frame.performance.latency_us.toFixed(2) : '---'} µs</span>
                 </div>
               </div>
               <div className="mt-2 pt-2 border-t border-white/5 text-[9px] text-slate-500 italic">

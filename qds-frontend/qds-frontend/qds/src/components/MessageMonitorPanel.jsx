@@ -18,12 +18,12 @@ export default function MessageMonitorPanel({ messages }) {
       <div className="text-xs tracking-wide text-slate-500 mb-3">MESSAGE MONITOR</div>
       <div className="space-y-1.5 max-h-72 overflow-y-auto">
         {items.length === 0 && (
-          <p className="text-[11px] text-slate-600 font-mono">No messages sent yet this session.</p>
+          <p className="text-[11px] text-slate-600 ">No messages sent yet this session.</p>
         )}
         {items.map((m) => (
           <div
             key={m.client_id ?? m.id}
-            className="flex items-start gap-2 text-[11px] font-mono px-2 py-1.5 rounded-sm bg-white/[0.02] border border-white/5"
+            className="flex items-start gap-2 text-[11px]  px-2 py-1.5 rounded-sm bg-white/[0.02] border border-white/5"
           >
             <span className="text-slate-600 shrink-0">{formatTime(m.ts)}</span>
             <span className="text-cyan shrink-0">{m.from_display_name ?? m.from_user_id ?? 'sender'}</span>

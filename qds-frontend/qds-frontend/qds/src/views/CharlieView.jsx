@@ -13,14 +13,14 @@ function CorrelationWavefront({ isVerificationRound, isMatch }) {
     return pts;
   }, []);
 
-  const color = !isVerificationRound ? '#3a4766' : isMatch ? '#00ff66' : '#ff003c';
+  const color = !isVerificationRound ? '#3a4766' : isMatch ? '#22C55E' : '#DC2626';
 
   return (
     <div className="rounded-lg border border-white/5 bg-surface/60 p-6">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs tracking-wide text-slate-500">RECEIVER ↔ VERIFIER CORRELATION</span>
         <span
-          className="text-[10px] font-mono px-2 py-0.5 rounded-sm"
+          className="text-[10px]  px-2 py-0.5 rounded-sm"
           style={{ color, background: `${color}1a` }}
         >
           {!isVerificationRound ? 'NON-VERIFICATION ROUND' : isMatch ? 'HARMONIC LOCK' : 'DECOHERENCE'}
@@ -66,11 +66,11 @@ export default function CharlieView({ frame, connection, embedded = false }) {
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
         <div className="rounded-lg border border-white/5 bg-surface/60 p-6 flex flex-col justify-between">
           <div className="text-xs tracking-wide text-slate-500 mb-1">MEASURED OUTCOME</div>
-          <div className="font-mono text-3xl text-cyan mono-nums">{charlie?.outcome ?? '—'}</div>
+          <div className=" text-3xl text-cyan mono-nums">{charlie?.outcome ?? '—'}</div>
         </div>
         <div className="rounded-lg border border-white/5 bg-surface/60 p-6 flex flex-col justify-between">
           <div className="text-xs tracking-wide text-slate-500 mb-1">BASIS</div>
-          <div className="font-mono text-lg text-slate-300">
+          <div className=" text-lg text-slate-300">
             {charlie?.basis ?? <span className="text-slate-600">— non-participating round —</span>}
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function CharlieView({ frame, connection, embedded = false }) {
 
       <div className="flex items-center justify-between rounded-lg border border-white/5 bg-surface/60 px-6 py-4 mb-6">
         <span className="text-xs tracking-wide text-slate-500">RUN STATUS</span>
-        <span className="text-xs font-mono px-3 py-1 rounded-full border border-amber/40 text-amber bg-amber/5">
+        <span className="text-xs  px-3 py-1 rounded-full border border-amber/40 text-amber bg-amber/5">
           {frame?.status ?? 'PROVISIONAL'}
         </span>
       </div>

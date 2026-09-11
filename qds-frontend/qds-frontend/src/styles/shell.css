@@ -1,0 +1,413 @@
+/* ============================================================
+   App shell: top rail, role nav, connection state, threat aura
+   ============================================================ */
+
+.shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Ambient threat aura (attack active) ----
+   Sits above the substrate but below content. Two layers:
+   a red vignette pulse + drifting scanlines. Only mounted when
+   attack.active is true, so there is zero cost at rest. */
+.aura {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.aura__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(244, 69, 60, 0.16), transparent 22%),
+    radial-gradient(ellipse 100% 55% at 50% 0%, rgba(244, 69, 60, 0.2), transparent 70%);
+  animation: aura-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes aura-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.aura__scan {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(244, 69, 60, 0.055) 0px,
+    rgba(244, 69, 60, 0.055) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  animation: aura-drift 22s linear infinite;
+}
+
+@keyframes aura-drift {
+  to {
+    transform: translateY(96px);
+  }
+}
+
+/* thin animated tracer along the very top edge */
+.aura__edge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), #ff8a80, var(--red), transparent);
+  background-size: 45% 100%;
+  animation: aura-sweep 2.1s linear infinite;
+}
+
+@keyframes aura-sweep {
+  from {
+    background-position: -60% 0;
+  }
+  to {
+    background-position: 160% 0;
+  }
+}
+
+/* ---- top rail ---- */
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 20px;
+  height: 56px;
+  background: rgba(6, 10, 18, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.rail__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.rail__mark {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.rail__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--tx-hi);
+  white-space: nowrap;
+}
+
+.rail__sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--tx-faint);
+  text-transform: uppercase;
+}
+
+.rail__spacer {
+  flex: 1;
+}
+
+/* role switcher */
+.roles {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+}
+
+.roles__btn {
+  position: relative;
+  isolation: isolate;
+  padding: 5px 13px;
+  border-radius: 99px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-dim);
+  transition: color 0.18s;
+  white-space: nowrap;
+}
+
+/* label rides above the sliding pill */
+.roles__tx {
+  position: relative;
+  z-index: 1;
+}
+
+.roles__btn:hover {
+  color: var(--tx-hi);
+}
+
+.roles__btn[data-on='true'] {
+  color: #04070d;
+  font-weight: 700;
+}
+
+.roles__pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background: var(--role, var(--cyan));
+  z-index: 0;
+}
+
+/* connection chip */
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--bg-inset);
+  flex-shrink: 0;
+}
+
+.conn__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--c, var(--tx-faint));
+  box-shadow: 0 0 9px var(--c, transparent);
+}
+
+.conn__dot[data-live='true'] {
+  animation: conn-pulse 1.7s ease-in-out infinite;
+}
+
+@keyframes conn-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+.conn__tx {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--tx-dim);
+}
+
+/* round ticker in the rail */
+.ticker {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+
+.ticker__n {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--tx-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- page body ---- */
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page--wall {
+  max-width: 1920px;
+}
+
+/* panel heading used inside every view */
+.phead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.phead__id {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.phead__t {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tx-hi);
+  letter-spacing: 0.01em;
+}
+
+.phead__d {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--tx-faint);
+}
+
+.pbody {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* generic field readout row */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--r);
+}
+
+.field__v {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+.field__v[data-null='true'] {
+  color: var(--tx-faint);
+  font-weight: 400;
+}
+
+/* the JSON path caption — makes the field binding legible to devs */
+.jsonpath {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--cyan) 55%, var(--tx-faint));
+  opacity: 0.75;
+}
+
+/* section divider with label */
+.sect {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sect::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line), transparent);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* footer hint bar */
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 11px 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r);
+  background: rgba(6, 10, 18, 0.5);
+}
+
+.hint__k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--tx-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hint code {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cyan);
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+@media (max-width: 900px) {
+  .rail {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .rail__spacer {
+    display: none;
+  }
+  .page {
+    padding: 14px;
+  }
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -13,7 +13,7 @@ function BitCell({ bit, index }) {
       className="w-20 h-24 sm:w-24 sm:h-28 rounded-lg border border-cyan/40 bg-cyan/5 flex items-center justify-center shadow-glow-cyan"
       style={{ perspective: 600 }}
     >
-      <span className="font-display text-5xl text-cyan">{bit}</span>
+      <span className=" text-5xl text-cyan">{bit}</span>
     </motion.div>
   );
 }
@@ -38,7 +38,7 @@ export default function AliceView({ frame, connection, embedded = false }) {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="text-xs tracking-wide text-slate-500 mb-1">BASIS</div>
-            <div className="font-mono text-sm text-cyan">{alice?.basis ?? '—'}</div>
+            <div className=" text-sm text-cyan">{alice?.basis ?? '—'}</div>
           </div>
           <AnimatePresence mode="wait">
             {measured ? (
@@ -47,17 +47,17 @@ export default function AliceView({ frame, connection, embedded = false }) {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-2 text-phosphor text-xs font-mono px-3 py-1.5 rounded-full border border-phosphor/30 bg-phosphor/5"
+                className="flex items-center gap-2 text-green-500 text-xs  px-3 py-1.5 rounded-full border border-green-500/30 bg-green-500/5"
               >
                 <motion.span
-                  className="w-1.5 h-1.5 rounded-full bg-phosphor"
+                  className="w-1.5 h-1.5 rounded-full bg-green-500"
                   animate={{ scale: [1, 1.6, 1] }}
                   transition={{ duration: 0.6, repeat: 2 }}
                 />
                 MESSAGE SIGNED
               </motion.div>
             ) : (
-              <span className="text-xs font-mono text-slate-600">AWAITING MEASUREMENT</span>
+              <span className="text-xs  text-slate-600">AWAITING MEASUREMENT</span>
             )}
           </AnimatePresence>
         </div>
@@ -72,7 +72,7 @@ export default function AliceView({ frame, connection, embedded = false }) {
                 ))}
               </React.Fragment>
             ) : (
-              <span className="text-slate-700 font-mono text-sm">no data</span>
+              <span className="text-slate-700  text-sm">no data</span>
             )}
           </AnimatePresence>
         </div>
