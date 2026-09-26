@@ -1,4 +1,4 @@
-﻿import { spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import readline from 'node:readline';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -115,10 +115,14 @@ export function spawnSimulator(attackType) {
   eventQueue = [];
   
   const env = Object.assign({}, process.env);
-  env.PATH = 'C:\\msys64\\ucrt64\\bin;' + (env.PATH || '');
+  const isWindows = process.platform === 'win32';
+  if (isWindows) {
+    env.PATH = 'C:\\msys64\\ucrt64\\bin;' + (env.PATH || '');
+  }
 
   const qdsDir = path.resolve(__dirname, '../../../../qds_framework');
-  simProcess = spawn('./qds_sim.exe', ['--rounds', '1000', '--attack', attackType], { cwd: qdsDir, env });
+  const simExe = isWindows ? './qds_sim.exe' : './qds_sim';
+  simProcess = spawn(simExe, ['--rounds', '1000', '--attack', attackType], { cwd: qdsDir, env });
   console.log('Spawned simulator with attack:', attackType);
   simProcess.on('error', (err) => console.error('Simulator spawn error:', err));
   simProcess.stderr.on('data', (d) => console.error('Simulator stderr:', d.toString()));
