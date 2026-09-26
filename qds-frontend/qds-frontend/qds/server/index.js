@@ -173,7 +173,7 @@ export function spawnSimulator(attackType) {
     } else if (simProcess === null) {
       clearInterval(simInterval);
     }
-  }, 100);
+  }, 10);
   
   simProcess.on('close', () => {
     simProcess = null;
